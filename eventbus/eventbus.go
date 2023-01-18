@@ -26,7 +26,7 @@ func (e *eventBusImpl) PublishAsync(eventName string, data any) {
 		defer e.mu.RUnlock()
 
 		for _, callback := range e.eventNameToSubscribeCallbacks[eventName] {
-			callback(data)
+			go callback(data)
 		}
 	}()
 }
