@@ -2,44 +2,49 @@ package eventbus
 
 import "sync"
 
-type subscribeCallback func(data any)
+type SubscribeCallback func(data any)
 
-type publishData struct {
-	message string
-	data    any
+type message struct {
+	eventName string
+	data      any
 }
 
-type eventBus struct {
-	messageToSubscribeCallback map[string][]subscribeCallback
-	mu                         sync.RWMutex
-	messageChannel             chan *publishData
+type EventBus interface {
+	PublishAsync(eventName string, data any)
+	Subscribe(eventName string, callback SubscribeCallback)
 }
 
-func newEventBus() *eventBus {
-	e := &eventBus{}
-	e.messageToSubscribeCallback = make(map[string][]subscribeCallback, 0)
-	e.messageChannel = make(chan *publishData)
+func NewEventBus() EventBus {
+	e := &eventBusImpl{}
+	e.eventNameToSubscribeCallbacks = make(map[string][]SubscribeCallback, 0)
+	e.messageChannel = make(chan *message)
 	go e.listen()
 	return e
 }
 
-var defaultEventBus = newEventBus()
-
-func (e *eventBus) publish(message string, data any) {
-	e.messageChannel <- &publishData{
-		message: message,
-		data:    data,
-	}
+type eventBusImpl struct {
+	eventNameToSubscribeCallbacks map[string][]SubscribeCallback
+	mu                            sync.RWMutex
+	messageChannel                chan *message
 }
 
-func (e *eventBus) subscribe(message string, callback subscribeCallback) {
+func (e *eventBusImpl) PublishAsync(eventName string, data any) {
+	go func() {
+		e.messageChannel <- &message{
+			eventName: eventName,
+			data:      data,
+		}
+	}()
+}
+
+func (e *eventBusImpl) Subscribe(eventName string, callback SubscribeCallback) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	e.messageToSubscribeCallback[message] = append(e.messageToSubscribeCallback[message], callback)
+	e.eventNameToSubscribeCallbacks[eventName] = append(e.eventNameToSubscribeCallbacks[eventName], callback)
 }
 
-func (e *eventBus) listen() {
+func (e *eventBusImpl) listen() {
 	for {
 		data := <-e.messageChannel
 
@@ -47,21 +52,9 @@ func (e *eventBus) listen() {
 			e.mu.RLock()
 			defer e.mu.RUnlock()
 
-			for _, callback := range e.messageToSubscribeCallback[data.message] {
+			for _, callback := range e.eventNameToSubscribeCallbacks[data.eventName] {
 				callback(data.data)
 			}
 		}()
 	}
-}
-
-func Publish(message string, data any) {
-	defaultEventBus.publish(message, data)
-}
-
-func PublishAsync(message string, data any) {
-	go defaultEventBus.publish(message, data)
-}
-
-func Subscribe(message string, callback subscribeCallback) {
-	defaultEventBus.subscribe(message, callback)
 }
