@@ -25,3 +25,4 @@ eventbus.PublishAsync("some.event.name", Example{})
 ```
 
 也可以使用 `eventbus.NewEventBus` 方法创建 `EventBus` 的一个默认实现实例，或者自行实现 `eventbus.EventBus` 接口
+
