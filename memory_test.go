@@ -4,6 +4,9 @@ import (
 	"context"
 	"sync"
 	"testing"
+
+	"github.com/mitchellh/mapstructure"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInMemoryHandler(t *testing.T) {
@@ -22,6 +25,37 @@ func TestInMemoryHandler(t *testing.T) {
 	for i := 0; i < total; i++ {
 		_ = eventbus.Publish(ctx, source, nil)
 	}
+
+	wg.Wait()
+}
+
+func TestPayload(t *testing.T) {
+	type Data struct {
+		ID   int
+		Name string
+	}
+
+	eventbus := New(NewInMemoryHandler())
+
+	ctx := context.TODO()
+	source := "test"
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	mock := Data{1, "foo"}
+
+	_ = eventbus.Subscribe(ctx, source, func(_ Source, payload Payload) {
+		defer wg.Done()
+
+		var data Data
+		require.NoError(t, mapstructure.Decode(payload, &data))
+
+		require.EqualValues(t, mock.ID, data.ID)
+		require.Equal(t, mock.Name, data.Name)
+	})
+
+	_ = eventbus.Publish(ctx, source, mock)
 
 	wg.Wait()
 }
