@@ -8,7 +8,7 @@ import (
 var defaultEventBus atomic.Pointer[EventBus]
 
 func init() {
-	defaultEventBus.Store(NewEventBus(NewInMemoryHandler()))
+	defaultEventBus.Store(New(NewInMemoryHandler()))
 }
 
 func SetDefault(eventbus *EventBus) {
@@ -17,10 +17,6 @@ func SetDefault(eventbus *EventBus) {
 
 func Subscribe(ctx context.Context, source Source, callback Callback) error {
 	return defaultEventBus.Load().Subscribe(ctx, source, callback)
-}
-
-func Unsubscribe(ctx context.Context, source Source) error {
-	return defaultEventBus.Load().Unsubscribe(ctx, source)
 }
 
 func Publish(ctx context.Context, source Source, payload Payload) error {

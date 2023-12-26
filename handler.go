@@ -4,8 +4,17 @@ import (
 	"context"
 )
 
-type Handler interface {
-	Subscribe(ctx context.Context, source Source, callback Callback) error
+type SubCmd struct {
+	Source   Source
+	Callback Callback
+}
 
-	Publish(ctx context.Context, source Source, payload Payload) error
+type PubCmd struct {
+	Source  Source
+	Payload Payload
+}
+
+type Handler interface {
+	Subscribe(ctx context.Context, cmd SubCmd) error
+	Publish(ctx context.Context, cmd PubCmd) error
 }
