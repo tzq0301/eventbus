@@ -118,9 +118,9 @@ func NewRedisHandler(options ...NewRedisHandlerOption) *RedisHandler {
 func (h *RedisHandler) Subscribe(ctx context.Context, cmd SubCmd) error {
 	stream := h.streamPrefix + cmd.Source
 
-	err := h.rdb.XGroupCreateMkStream(ctx, stream, redisDummyGroup, "$").Err()
-	if err != nil && !redis.HasErrorPrefix(err, "BUSYGROUP") {
-		return fmt.Errorf("create redis stream group, stream=%q, group=%q: %w", stream, redisDummyGroup, err)
+	err := h.createStreamGroupIfNotExist(ctx, stream)
+	if err != nil {
+		return fmt.Errorf("subscribe event with source=%q: %w", cmd.Source, err)
 	}
 
 	h.mu.Lock()
@@ -134,9 +134,9 @@ func (h *RedisHandler) Subscribe(ctx context.Context, cmd SubCmd) error {
 func (h *RedisHandler) Publish(ctx context.Context, cmd PubCmd) error {
 	stream := h.streamPrefix + cmd.Source
 
-	err := h.rdb.XGroupCreateMkStream(ctx, stream, redisDummyGroup, "$").Err()
-	if err != nil && !redis.HasErrorPrefix(err, "BUSYGROUP") {
-		return fmt.Errorf("create redis stream group, stream=%q, group=%q: %w", stream, redisDummyGroup, err)
+	err := h.createStreamGroupIfNotExist(ctx, stream)
+	if err != nil {
+		return fmt.Errorf("publich event with source=%q: %w", cmd.Source, err)
 	}
 
 	payload, err := json.Marshal(cmd.Payload)
@@ -207,4 +207,12 @@ func (h *RedisHandler) handleEachLoop() {
 			}
 		}
 	}
+}
+
+func (h *RedisHandler) createStreamGroupIfNotExist(ctx context.Context, stream string) error {
+	err := h.rdb.XGroupCreateMkStream(ctx, stream, redisDummyGroup, "$").Err()
+	if err != nil && !redis.HasErrorPrefix(err, "BUSYGROUP") {
+		return fmt.Errorf("create redis stream group, stream=%q, group=%q: %w", stream, redisDummyGroup, err)
+	}
+	return nil
 }
