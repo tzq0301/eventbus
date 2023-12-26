@@ -1,4 +1,1 @@
 package eventbus
-
-func main() {
-}

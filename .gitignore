@@ -1,1 +1,45 @@
+# IDE & vscode
 .idea/
+.fleet/
+.cache/
+.vscode/
+.settings/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+.Spotlight-V100
+.Trashes
+
+out/
+target/
+build/
+
+**/log/
+*.log
+
+# Java
+*.war
+*.jar
+*.class
+
+# Go
+go.work
+
+*.exe
+*.exe~
+*.out
+*.o
+*.so
+*.ddl
+*.dylib
+
+*.7z
+*.dmg
+*.gz
+*.iso
+*.rar
+*.tar
+*.zip
