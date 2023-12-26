@@ -9,14 +9,14 @@ var _ Handler = &InMemoryHandler{}
 type InMemoryHandler struct {
 	subCh  chan SubCmd
 	pubCh  chan PubCmd
-	worker chan func()
+	worker chan func() // use another goroutine to execute callback, to avoid deadlock while Publish in Subscribe
 }
 
 func NewInMemoryHandler() *InMemoryHandler {
 	handler := InMemoryHandler{
 		subCh:  make(chan SubCmd),
 		pubCh:  make(chan PubCmd),
-		worker: make(chan func()), // use another goroutine to listen worker, to avoid deadlock
+		worker: make(chan func()),
 	}
 
 	go handler.handle()
