@@ -24,10 +24,6 @@ func (b *EventBus) Subscribe(ctx context.Context, source Source, callback Callba
 	return b.handler.Subscribe(ctx, source, callback)
 }
 
-func (b *EventBus) Unsubscribe(ctx context.Context, source Source) error {
-	return b.handler.Unsubscribe(ctx, source)
-}
-
 func (b *EventBus) Publish(ctx context.Context, source Source, payload Payload) error {
 	return b.handler.Publish(ctx, source, payload)
 }

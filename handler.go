@@ -6,6 +6,6 @@ import (
 
 type Handler interface {
 	Subscribe(ctx context.Context, source Source, callback Callback) error
-	Unsubscribe(ctx context.Context, source Source) error
+
 	Publish(ctx context.Context, source Source, payload Payload) error
 }
