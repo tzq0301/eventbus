@@ -9,6 +9,8 @@ import (
 func TestAPI(t *testing.T) {
 	ctx := context.TODO()
 
+	SetDefault(New(NewInMemoryHandler()))
+
 	source := "test"
 
 	type Data struct {
