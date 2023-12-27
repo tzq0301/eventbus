@@ -3,6 +3,7 @@ package eventbus
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -181,12 +182,12 @@ func (h *RedisHandler) handleEachLoop() {
 			Consumer: redisDummyConsumer,
 			Streams:  []string{stream, ">"},
 			Count:    h.countPerPull,
+			Block:    10 * time.Millisecond,
 			NoAck:    true,
-			Block:    -time.Millisecond,
 		}
 
 		result, err := h.rdb.XReadGroup(ctx, xReadGroupArgs).Result()
-		if err != nil {
+		if err != nil && !errors.Is(err, redis.Nil) {
 			h.errHandler(fmt.Errorf("redis XReadGroup stream=%q: %w", stream, err))
 			continue
 		}

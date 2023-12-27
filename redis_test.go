@@ -32,7 +32,7 @@ func TestRedisGroupCreate(t *testing.T) {
 		WithRedisPullTimeout(2*time.Second),
 		WithRedisCountPerPull(3),
 		WithRedisErrHandler(func(err error) {
-			panic(err)
+			require.NoError(t, err, err.Error())
 		}),
 	))
 
@@ -59,7 +59,7 @@ func TestRedisPublish(t *testing.T) {
 		WithRedisPullTimeout(2*time.Second),
 		WithRedisCountPerPull(3),
 		WithRedisErrHandler(func(err error) {
-			panic(err)
+			require.NoErrorf(t, err, err.Error())
 		}),
 	))
 
@@ -180,7 +180,9 @@ func TestCase(t *testing.T) {
 	redisContainer := must(rediscontainers.RunContainer(ctx, testcontainers.WithImage("redis:latest")))
 	rdb := redis.NewClient(must(redis.ParseURL(must(redisContainer.ConnectionString(ctx)))))
 
-	eventbus := New(NewRedisHandler(WithRedisRDB(rdb)))
+	eventbus := New(NewRedisHandler(WithRedisRDB(rdb), WithRedisErrHandler(func(err error) {
+		require.NoError(t, err)
+	})))
 
 	const (
 		UserEvent  Event = "user"
