@@ -11,7 +11,7 @@ func TestAPI(t *testing.T) {
 
 	SetDefault(New(NewInMemoryHandler()))
 
-	source := "test"
+	event := "test"
 
 	type Data struct {
 		ID   int
@@ -26,7 +26,7 @@ func TestAPI(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	_ = Subscribe(ctx, source, func(_ Source, payload Payload) {
+	_ = Subscribe(ctx, event, func(_ Event, payload Payload) {
 		defer wg.Done()
 		data := payload.(Data)
 		if data.ID != mockData.ID || data.Name != mockData.Name {
@@ -34,7 +34,7 @@ func TestAPI(t *testing.T) {
 		}
 	})
 
-	_ = Publish(ctx, source, mockData)
+	_ = Publish(ctx, event, mockData)
 
 	wg.Wait()
 }

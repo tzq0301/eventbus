@@ -10,10 +10,10 @@ func SetDefault(eventbus *EventBus) {
 	defaultEventBus = eventbus
 }
 
-func Subscribe(ctx context.Context, source Source, callback Callback) error {
-	return defaultEventBus.Subscribe(ctx, source, callback)
+func Subscribe(ctx context.Context, event Event, callback Callback) error {
+	return defaultEventBus.Subscribe(ctx, event, callback)
 }
 
-func Publish(ctx context.Context, source Source, payload Payload) error {
-	return defaultEventBus.Publish(ctx, source, payload)
+func Publish(ctx context.Context, event Event, payload Payload) error {
+	return defaultEventBus.Publish(ctx, event, payload)
 }

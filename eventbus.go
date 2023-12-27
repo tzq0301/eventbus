@@ -5,9 +5,9 @@ import (
 )
 
 type (
-	Source   = string
+	Event    = string
 	Payload  = any
-	Callback func(source Source, payload Payload)
+	Callback func(event Event, payload Payload)
 )
 
 type EventBus struct {
@@ -20,16 +20,16 @@ func New(handler Handler) *EventBus {
 	}
 }
 
-func (b *EventBus) Subscribe(ctx context.Context, source Source, callback Callback) error {
+func (b *EventBus) Subscribe(ctx context.Context, event Event, callback Callback) error {
 	return b.handler.Subscribe(ctx, SubCmd{
-		Source:   source,
+		Event:    event,
 		Callback: callback,
 	})
 }
 
-func (b *EventBus) Publish(ctx context.Context, source Source, payload Payload) error {
+func (b *EventBus) Publish(ctx context.Context, event Event, payload Payload) error {
 	return b.handler.Publish(ctx, PubCmd{
-		Source:  source,
+		Event:   event,
 		Payload: payload,
 	})
 }

@@ -37,16 +37,16 @@ func (h *InMemoryHandler) Publish(_ context.Context, cmd PubCmd) error {
 func (h *InMemoryHandler) handle() {
 	go h.work()
 
-	m := make(map[Source][]Callback)
+	m := make(map[Event][]Callback)
 
 	for {
 		select {
 		case cmd := <-h.subCh:
-			m[cmd.Source] = append(m[cmd.Source], cmd.Callback)
+			m[cmd.Event] = append(m[cmd.Event], cmd.Callback)
 		case cmd := <-h.pubCh:
-			for _, callback := range m[cmd.Source] {
+			for _, callback := range m[cmd.Event] {
 				h.worker <- func() {
-					callback(cmd.Source, cmd.Payload)
+					callback(cmd.Event, cmd.Payload)
 				}
 			}
 		}

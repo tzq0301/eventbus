@@ -13,17 +13,17 @@ func TestInMemoryHandler(t *testing.T) {
 	eventbus := New(NewInMemoryHandler())
 
 	ctx := context.TODO()
-	source := "test"
+	event := "test"
 	var wg sync.WaitGroup
 
-	_ = eventbus.Subscribe(ctx, source, func(_ Source, _ Payload) {
+	_ = eventbus.Subscribe(ctx, event, func(_ Event, _ Payload) {
 		wg.Done()
 	})
 
 	total := 100
 	wg.Add(total)
 	for i := 0; i < total; i++ {
-		_ = eventbus.Publish(ctx, source, nil)
+		_ = eventbus.Publish(ctx, event, nil)
 	}
 
 	wg.Wait()
@@ -38,14 +38,14 @@ func TestPayload(t *testing.T) {
 	eventbus := New(NewInMemoryHandler())
 
 	ctx := context.TODO()
-	source := "test"
+	event := "test"
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
 	mock := Data{1, "foo"}
 
-	_ = eventbus.Subscribe(ctx, source, func(_ Source, payload Payload) {
+	_ = eventbus.Subscribe(ctx, event, func(_ Event, payload Payload) {
 		defer wg.Done()
 
 		var data Data
@@ -55,7 +55,7 @@ func TestPayload(t *testing.T) {
 		require.Equal(t, mock.Name, data.Name)
 	})
 
-	_ = eventbus.Publish(ctx, source, mock)
+	_ = eventbus.Publish(ctx, event, mock)
 
 	wg.Wait()
 }
@@ -66,18 +66,18 @@ func TestPubInSub(t *testing.T) {
 	ctx := context.TODO()
 	ctx, cancel := context.WithCancel(ctx)
 
-	outerSource := "outer"
-	innerSource := "inner"
+	outerEvent := "outer"
+	innerEVent := "inner"
 
-	_ = eventbus.Subscribe(ctx, innerSource, func(_ Source, _ Payload) {
+	_ = eventbus.Subscribe(ctx, innerEVent, func(_ Event, _ Payload) {
 		cancel()
 	})
 
-	_ = eventbus.Subscribe(ctx, outerSource, func(_ Source, _ Payload) {
-		_ = eventbus.Publish(ctx, innerSource, nil)
+	_ = eventbus.Subscribe(ctx, outerEvent, func(_ Event, _ Payload) {
+		_ = eventbus.Publish(ctx, innerEVent, nil)
 	})
 
-	_ = eventbus.Publish(ctx, outerSource, nil)
+	_ = eventbus.Publish(ctx, outerEvent, nil)
 
 	select {
 	case <-ctx.Done():
@@ -89,24 +89,24 @@ func TestNested(t *testing.T) {
 
 	ctx := context.TODO()
 
-	sources := []string{"A", "B", "C"}
+	events := []string{"A", "B", "C"}
 
 	done := make(chan struct{})
 
-	for i := range sources {
+	for i := range events {
 		i := i
-		_ = eventbus.Subscribe(ctx, sources[i], func(_ Source, _ Payload) {
-			_ = eventbus.Publish(ctx, sources[(i+1)%len(sources)], nil)
+		_ = eventbus.Subscribe(ctx, events[i], func(_ Event, _ Payload) {
+			_ = eventbus.Publish(ctx, events[(i+1)%len(events)], nil)
 			done <- struct{}{}
 		})
 	}
 
-	_ = eventbus.Publish(ctx, sources[0], nil)
+	_ = eventbus.Publish(ctx, events[0], nil)
 
 	counter := 0
 	for range done {
 		counter++
-		if counter == len(sources) {
+		if counter == len(events) {
 			break
 		}
 	}

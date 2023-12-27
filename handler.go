@@ -5,12 +5,12 @@ import (
 )
 
 type SubCmd struct {
-	Source   Source
+	Event    Event
 	Callback Callback
 }
 
 type PubCmd struct {
-	Source  Source
+	Event   Event
 	Payload Payload
 }
 

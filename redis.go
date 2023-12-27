@@ -29,8 +29,8 @@ var (
 type RedisHandler struct {
 	rdb *redis.Client
 
-	mu        sync.RWMutex
-	callbacks map[string][]Callback // stream -> []Callback
+	callbackMu sync.RWMutex
+	callbacks  map[string][]Callback // stream -> []Callback
 
 	streamPrefix string // should like "bu:event:" or empty
 
@@ -116,15 +116,15 @@ func NewRedisHandler(options ...NewRedisHandlerOption) *RedisHandler {
 }
 
 func (h *RedisHandler) Subscribe(ctx context.Context, cmd SubCmd) error {
-	stream := h.streamPrefix + cmd.Source
+	stream := h.streamPrefix + cmd.Event
 
 	err := h.createStreamGroupIfNotExist(ctx, stream)
 	if err != nil {
-		return fmt.Errorf("subscribe event with source=%q: %w", cmd.Source, err)
+		return fmt.Errorf("subscribe event with event=%q: %w", cmd.Event, err)
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	h.callbackMu.Lock()
+	defer h.callbackMu.Unlock()
 
 	h.callbacks[stream] = append(h.callbacks[stream], cmd.Callback)
 
@@ -132,11 +132,11 @@ func (h *RedisHandler) Subscribe(ctx context.Context, cmd SubCmd) error {
 }
 
 func (h *RedisHandler) Publish(ctx context.Context, cmd PubCmd) error {
-	stream := h.streamPrefix + cmd.Source
+	stream := h.streamPrefix + cmd.Event
 
 	err := h.createStreamGroupIfNotExist(ctx, stream)
 	if err != nil {
-		return fmt.Errorf("publich event with source=%q: %w", cmd.Source, err)
+		return fmt.Errorf("publich event with event=%q: %w", cmd.Event, err)
 	}
 
 	payload, err := json.Marshal(cmd.Payload)
@@ -170,8 +170,8 @@ func (h *RedisHandler) handleEachLoop() {
 	ctx, cancel := context.WithTimeout(context.TODO(), h.pullTimeout)
 	defer cancel()
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	h.callbackMu.Lock()
+	defer h.callbackMu.Unlock()
 
 	var xStreams []redis.XStream
 
@@ -182,6 +182,7 @@ func (h *RedisHandler) handleEachLoop() {
 			Streams:  []string{stream, ">"},
 			Count:    h.countPerPull,
 			NoAck:    true,
+			Block:    -time.Millisecond,
 		}
 
 		result, err := h.rdb.XReadGroup(ctx, xReadGroupArgs).Result()
