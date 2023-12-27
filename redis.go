@@ -14,8 +14,8 @@ var _ Handler = &RedisHandler{}
 
 const (
 	redisDummyGroup    = "dummy"
-	redisDummyConsumer = "consumer"
-	redisDummyKey      = "key"
+	redisDummyConsumer = "dummy"
+	redisDummyKey      = "dummy"
 
 	redisDefaultPullInterval = 500 * time.Millisecond
 	redisDefaultTimeout      = 5 * time.Second
